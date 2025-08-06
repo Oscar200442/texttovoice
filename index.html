@@ -1,20 +1,16 @@
 <!DOCTYPE html>
 <html lang="da">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Tekst til Tale med Tokens</title>
-    <!-- Primary Supabase CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-    <!-- Fallback CDN -->
-    <script>
+<!-- Primary Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- Fallback CDN -->
+<script>
+    if (!window.Supabase) {
+        document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"><\/script>');
         if (!window.Supabase) {
-            document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"><\/script>');
-            if (!window.Supabase) {
-                document.write('<script src="https://cdn.skypack.dev/@supabase/supabase-js@2"><\/script>');
-            }
+            document.write('<script src="https://cdn.skypack.dev/@supabase/supabase-js@2"><\/script>');
         }
-    </script>
+    }
+</script>
     <style>
         body {
             font-family: sans-serif;
