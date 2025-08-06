@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Tekst til Tale med Tokens</title>
-    <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
         body {
             font-family: sans-serif;
@@ -59,49 +59,4 @@
             color: #555;
         }
         .error {
-            color: red;
-        }
-        #auth-form, #app-container {
-            display: none;
-        }
-        #auth-form form {
-            display: flex;
-            flex-direction: column;
-            gap: 1em;
-            margin-top: 2em;
-        }
-        #auth-form input {
-            padding: 10px;
-        }
-        .token-balance {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #007bff;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>AI Tekst til Tale med Tokens</h1>
-        <p>Login for at generere tale. Hver forespørgsel koster 1 token.</p>
-        <div id="auth-form">
-            <h3>Login eller Opret bruger</h3>
-            <form id="login-form">
-                <input type="email" id="email" placeholder="Din e-mail" required>
-                <input type="password" id="password" placeholder="Dit kodeord" required>
-                <button type="submit" id="login-button">Log ind</button>
-            </form>
-            <button id="signup-button">Opret bruger</button>
-        </div>
-        <div id="app-container">
-            <div class="token-balance">Tokens: <span id="token-count">0</span></div>
-            <button id="logout-button">Log ud</button>
-            <textarea id="text-input" placeholder="Skriv din tekst her..." required></textarea>
-            <button id="speak-button">Læs op</button>
-            <div id="status-message" class="loading"></div>
-            <audio id="audio-output" controls></audio>
-        </div>
-    </div>
-    <script src="script.js"></script>
-</body>
-</html>
+            color: red
