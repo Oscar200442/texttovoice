@@ -3,11 +3,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const SUPABASE_URL = 'https://czocthrzbtoaudyerssg.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6b2N0aHJ6YnRvYXVkeWVyc3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1M';
 
-    // Initialize Supabase client
+    // Check if Supabase library is loaded
     if (!window.Supabase) {
         console.error('Supabase library not loaded. Please check the CDN script in index.html.');
+        document.getElementById('status-message').textContent = 'Error: Supabase library failed to load.';
         return;
     }
+
+    // Initialize Supabase client
     const supabase = window.Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // UI Elements
