@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simpel AI Tekst til Tale</title>
+    <title>AI Tekst til Tale med Tokens</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: sans-serif; padding: 2em; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 600px; width: 100%; text-align: center; }
@@ -15,24 +16,137 @@
         #status-message { min-height: 20px; margin-top: 1em; }
         .loading { font-style: italic; color: #555; }
         .error { color: red; }
+
+        #auth-form, #app-container {
+            display: none;
+        }
+
+        #auth-form form {
+            display: flex;
+            flex-direction: column;
+            gap: 1em;
+            margin-top: 2em;
+        }
+        #auth-form input {
+            padding: 10px;
+        }
+
+        .token-balance {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #007bff;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Simpel AI Tekst til Tale</h1>
-        <p>Skriv en tekst og lad AI'en læse den højt. Hjemmesiden er offentlig.</p>
-        <textarea id="text-input" placeholder="Skriv din tekst her..." required></textarea>
-        <button id="speak-button">Læs op</button>
-        <div id="status-message" class="loading"></div>
-        <audio id="audio-output" controls></audio>
+        <h1>AI Tekst til Tale med Tokens</h1>
+        <p>Login for at generere tale. Hver forespørgsel koster 1 token.</p>
+        
+        <div id="auth-form">
+            <h3>Login / Opret bruger</h3>
+            <form id="login-form">
+                <input type="email" id="email" placeholder="Din e-mail" required>
+                <input type="password" id="password" placeholder="Dit kodeord" required>
+                <button type="submit">Log ind</button>
+            </form>
+            <button id="signup-button">Opret bruger</button>
+        </div>
+
+        <div id="app-container">
+            <div class="token-balance">Tokens: <span id="token-count">0</span></div>
+            <button id="logout-button">Log ud</button>
+            <textarea id="text-input" placeholder="Skriv din tekst her..." required></textarea>
+            <button id="speak-button">Læs op</button>
+            <div id="status-message" class="loading"></div>
+            <audio id="audio-output" controls></audio>
+        </div>
     </div>
 
     <script>
-        const textInput = document.getElementById('text-input');
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        
+        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // UI Elementer
+        const authForm = document.getElementById('auth-form');
+        const loginForm = document.getElementById('login-form');
+        const signupButton = document.getElementById('signup-button');
+        const logoutButton = document.getElementById('logout-button');
+        const appContainer = document.getElementById('app-container');
+        const tokenCount = document.getElementById('token-count');
         const speakButton = document.getElementById('speak-button');
+        const textInput = document.getElementById('text-input');
         const audioOutput = document.getElementById('audio-output');
         const statusMessage = document.getElementById('status-message');
 
+        // Funktion til at opdatere brugerfladen
+        async function updateUI() {
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (user) {
+                authForm.style.display = 'none';
+                appContainer.style.display = 'block';
+                await fetchUserTokens(user.id);
+            } else {
+                authForm.style.display = 'block';
+                appContainer.style.display = 'none';
+            }
+        }
+
+        // Hent brugerens token-saldo
+        async function fetchUserTokens(userId) {
+            const { data, error } = await supabase
+                .from('users')
+                .select('tokens')
+                .eq('id', userId)
+                .single();
+
+            if (error) {
+                console.error('Fejl ved hentning af tokens:', error);
+                tokenCount.textContent = 'Fejl';
+            } else {
+                tokenCount.textContent = data.tokens;
+            }
+        }
+
+        // Login logik
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = loginForm.email.value;
+            const password = loginForm.password.value;
+            
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            
+            if (error) {
+                alert(error.message);
+            } else {
+                updateUI();
+            }
+        });
+
+        // Opret bruger logik
+        signupButton.addEventListener('click', async () => {
+            const email = loginForm.email.value;
+            const password = loginForm.password.value;
+            
+            const { error } = await supabase.auth.signUp({ email, password });
+
+            if (error) {
+                alert(error.message);
+            } else {
+                alert('Bruger oprettet! Tjek din e-mail for at bekræfte.');
+            }
+        });
+
+        // Log ud logik
+        logoutButton.addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            updateUI();
+        });
+
+        // Læs op logik
         speakButton.addEventListener('click', async () => {
             const text = textInput.value;
             if (text === '') return;
@@ -41,11 +155,22 @@
             statusMessage.textContent = 'Genererer tale...';
             statusMessage.classList.remove('error');
             audioOutput.src = '';
+            
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                statusMessage.textContent = 'Du skal være logget ind.';
+                statusMessage.classList.add('error');
+                speakButton.disabled = false;
+                return;
+            }
 
             try {
                 const response = await fetch('/api/text-to-speech', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}` // Sender brugerens token
+                    },
                     body: JSON.stringify({ text })
                 });
 
@@ -55,18 +180,29 @@
                     audioOutput.src = audioUrl;
                     statusMessage.textContent = 'Færdig!';
                     audioOutput.play();
+                    await fetchUserTokens(session.user.id); // Opdaterer token-saldoen
                 } else {
-                    const errorData = await response.text();
-                    statusMessage.textContent = `Fejl: ${errorData}`;
+                    const errorText = await response.text();
+                    statusMessage.textContent = `Fejl: ${errorText}`;
                     statusMessage.classList.add('error');
                 }
             } catch (error) {
                 console.error("Frontend Fejl:", error);
-                statusMessage.textContent = 'En netværksfejl opstod. Tjek din internetforbindelse.';
+                statusMessage.textContent = 'En netværksfejl opstod.';
                 statusMessage.classList.add('error');
             } finally {
                 speakButton.disabled = false;
             }
+        });
+
+        // Initialisering
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN') {
+                // Her kan du oprette brugeren i din 'users' tabel
+                // Dette kræver en separat serverless function, eller en database trigger
+                // For nu antager vi, at brugeren allerede eksisterer
+            }
+            updateUI();
         });
     </script>
 </body>
