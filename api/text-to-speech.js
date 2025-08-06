@@ -1,4 +1,4 @@
-import { fetch } from 'node-fetch'; // Vercel understøtter 'node-fetch' ud af boksen
+// Fjern linjen: import { fetch } from 'node-fetch';
 
 export default async function (request, response) {
     const apiKey = process.env.OPENAI_API_KEY;
@@ -31,9 +31,9 @@ export default async function (request, response) {
             return response.status(openaiResponse.status).send(`OpenAI fejl: ${errorText}`);
         }
 
-        const audioBuffer = await openaiResponse.buffer();
+        const audioBuffer = await openaiResponse.arrayBuffer(); // Brug arrayBuffer i stedet for buffer
         response.setHeader('Content-Type', 'audio/mpeg');
-        response.status(200).send(audioBuffer);
+        response.status(200).send(Buffer.from(audioBuffer));
 
     } catch (error) {
         console.error("Serverfejl:", error);
