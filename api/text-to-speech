@@ -1,0 +1,30 @@
+import OpenAI from "openai";
+
+export default async function (request, response) {
+    // Din API-nøgle er gemt som en Vercel Environment Variable
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const { text } = request.body;
+
+    if (!text) {
+        return response.status(400).json({ error: 'Tekst mangler.' });
+    }
+
+    try {
+        const audioResponse = await openai.audio.speech.create({
+            model: "tts-1",
+            voice: "alloy",
+            input: text,
+            response_format: "mp3"
+        });
+
+        // Konverterer audio-data til en buffer
+        const audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
+
+        response.setHeader('Content-Type', 'audio/mpeg');
+        response.status(200).send(audioBuffer);
+
+    } catch (error) {
+        console.error("OpenAI API Fejl:", error.message);
+        return response.status(500).json({ error: 'Fejl ved at generere tale. Kontroller din API-nøgle.' });
+    }
+}
