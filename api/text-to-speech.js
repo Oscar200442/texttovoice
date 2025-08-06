@@ -1,78 +1,62 @@
-import { createClient } from '@supabase/supabase-js';
-import { fetch } from 'node-fetch'; // Vercel har indbygget 'fetch'
+const { createClient } = require('@supabase/supabase-js');
 
-// Initialiserer Supabase-klienten ved hjælp af Environment Variables fra Vercel
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Supabase configuration
+const SUPABASE_URL = 'https://czocthrzbtoaudyerssg.supabase.co';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY; // Use environment variable for service key
 
-export default async function (request, response) {
-    const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY;
-    const { text, userToken } = request.body; // Vi antager, at vi modtager en userToken
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    if (!elevenLabsApiKey) {
-        return response.status(500).send("ElevenLabs API-nøgle mangler.");
-    }
-    if (!text || !userToken) {
-        return response.status(400).send("Tekst eller bruger-token mangler.");
+module.exports = async (req, res) => {
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    // 1. Valider brugerens token
-    const { data: { user }, error: authError } = await supabase.auth.api.getUser(userToken);
-    
-    if (authError || !user) {
-        return response.status(401).send("Ugyldig bruger-token. Log venligst ind igen.");
+    const { text } = req.body;
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(401).json({ error: 'No authorization header' });
     }
 
-    // 2. Tjek brugerens token-saldo
-    const { data: userData, error: userError } = await supabase
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user } } = await supabase.auth.getUser(token);
+
+    if (!user) {
+        return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+
+    // Check token balance
+    const { data, error } = await supabase
         .from('users')
         .select('tokens')
         .eq('id', user.id)
         .single();
 
-    if (userError || userData.tokens < 1) {
-        return response.status(403).send("Du har ikke nok tokens. Venligst køb flere.");
+    if (error || !data || data.tokens < 1) {
+        return res.status(403).json({ error: 'Insufficient tokens' });
     }
 
-    // 3. Træk 1 token fra saldoen
-    const newTokens = userData.tokens - 1;
-    await supabase
+    // Deduct token
+    const { error: updateError } = await supabase
         .from('users')
-        .update({ tokens: newTokens })
+        .update({ tokens: data.tokens - 1 })
         .eq('id', user.id);
 
-    // 4. Send anmodning til ElevenLabs API
-    try {
-        const elevenLabsResponse = await fetch('https://api.elevenlabs.io/v1/text-to-speech/21m00TzHpg1eYV1XnFgo', {
-            method: 'POST',
-            headers: {
-                'Accept': 'audio/mpeg',
-                'Content-Type': 'application/json',
-                'xi-api-key': elevenLabsApiKey,
-            },
-            body: JSON.stringify({
-                text: text,
-                model_id: "eleven_multilingual_v2",
-                voice_settings: {
-                    stability: 0.5,
-                    similarity_boost: 0.5
-                }
-            }),
-        });
-
-        if (!elevenLabsResponse.ok) {
-            const errorText = await elevenLabsResponse.text();
-            console.error("ElevenLabs API Fejl:", errorText);
-            return response.status(elevenLabsResponse.status).send(`ElevenLabs fejl: ${errorText}`);
-        }
-
-        const audioBuffer = await elevenLabsResponse.arrayBuffer();
-        response.setHeader('Content-Type', 'audio/mpeg');
-        response.status(200).send(Buffer.from(audioBuffer));
-
-    } catch (error) {
-        console.error("Serverfejl:", error);
-        return response.status(500).send("En ukendt fejl opstod på serveren.");
+    if (updateError) {
+        return res.status(500).json({ error: 'Failed to update tokens' });
     }
-}
+
+    // Example: Call a text-to-speech API (replace with your actual TTS service)
+    try {
+        // Placeholder for TTS API call
+        // const response = await fetch('https://your-tts-api.com/synthesize', { ... });
+        // const audioBuffer = await response.buffer();
+        // res.setHeader('Content-Type', 'audio/mpeg');
+        // res.status(200).send(audioBuffer);
+
+        // For now, return a mock response
+        res.status(200).json({ message: 'Mock audio response' });
+    } catch (error) {
+        res.status(500).json({ error: 'Text-to-speech generation failed' });
+    }
+};
