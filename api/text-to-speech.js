@@ -9,7 +9,7 @@ export default async (req, res) => {
     }
 
     const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
-    const VOICE_ID = 'C43bq5qXRueL1cBQEOt3';
+    const VOICE_ID = 'kdmDKE6EkgrWrrykO9Qt';
     const API_URL = `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`;
 
     try {
