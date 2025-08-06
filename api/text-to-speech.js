@@ -13,7 +13,7 @@ export default async function (request, response) {
     }
 
     try {
-        const elevenLabsResponse = await fetch('https://api.elevenlabs.io/v1/text-to-speech/21m00TzHpg1eYV1XnFgo', {
+        const elevenLabsResponse = await fetch('https://api.elevenlabs.io/v1/text-to-speech/ygiXC2Oa1BiHksD3WkJZ', {
             method: 'POST',
             headers: {
                 'Accept': 'audio/mpeg',
