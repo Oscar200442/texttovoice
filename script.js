@@ -4,8 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const audioOutput = document.getElementById('audio-output');
     const statusMessage = document.getElementById('status-message');
 
-    const ELEVENLABS_API_KEY = 'YOUR_ELEVENLABS_API_KEY'; // Replace with your API key
-    const VOICE_ID = 'pNInz6obpgDQGcFmaJgB'; // Example voice ID (e.g., Rachel)
+    const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || 'sk_fe655a513ea90fdb019b2616a409f6a7f3773cdeb6a1ba06'; // Fallback for now
+    const VOICE_ID = 'C43bq5qXRueL1cBQEOt3'; // New voice ID provided
     const API_URL = 'https://api.elevenlabs.io/v1/text-to-speech/' + VOICE_ID;
 
     speakButton.addEventListener('click', async () => {
