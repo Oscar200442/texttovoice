@@ -2,7 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 // Supabase configuration
 const SUPABASE_URL = 'https://czocthrzbtoaudyerssg.supabase.co';
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY; // Use environment variable for service key
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -46,16 +46,14 @@ module.exports = async (req, res) => {
         return res.status(500).json({ error: 'Failed to update tokens' });
     }
 
-    // Example: Call a text-to-speech API (replace with your actual TTS service)
+    // Placeholder for text-to-speech API
     try {
-        // Placeholder for TTS API call
-        // const response = await fetch('https://your-tts-api.com/synthesize', { ... });
+        // Replace with your actual TTS API call, e.g., ElevenLabs or Google Cloud TTS
+        // Example: const response = await fetch('https://your-tts-api.com/synthesize', { ... });
         // const audioBuffer = await response.buffer();
         // res.setHeader('Content-Type', 'audio/mpeg');
         // res.status(200).send(audioBuffer);
-
-        // For now, return a mock response
-        res.status(200).json({ message: 'Mock audio response' });
+        res.status(200).json({ message: 'Mock audio response - replace with TTS API' });
     } catch (error) {
         res.status(500).json({ error: 'Text-to-speech generation failed' });
     }
