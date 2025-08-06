@@ -4,26 +4,66 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Tekst til Tale med Tokens</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 2em; display: flex; flex-direction: column; align-items: center; }
-        .container { max-width: 600px; width: 100%; text-align: center; }
-        h1 { color: #333; }
-        textarea { width: 100%; height: 200px; padding: 10px; margin-bottom: 1em; font-size: 16px; border: 1px solid #ccc; }
-        button { padding: 10px 20px; font-size: 16px; color: white; border: none; cursor: pointer; border-radius: 5px; }
-        button#signup-button { background-color: #28a745; }
-        button#login-button { background-color: #007bff; }
-        button#logout-button, button#speak-button { background-color: #dc3545; }
-        button:hover { opacity: 0.8; }
-        audio { margin-top: 2em; width: 100%; }
-        #status-message { min-height: 20px; margin-top: 1em; }
-        .loading { font-style: italic; color: #555; }
-        .error { color: red; }
-
+        body {
+            font-family: sans-serif;
+            padding: 2em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            margin-bottom: 1em;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button#login-button {
+            background-color: #007bff;
+        }
+        button#signup-button {
+            background-color: #28a745;
+        }
+        button#logout-button, button#speak-button {
+            background-color: #dc3545;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+        audio {
+            margin-top: 2em;
+            width: 100%;
+        }
+        #status-message {
+            min-height: 20px;
+            margin-top: 1em;
+        }
+        .loading {
+            font-style: italic;
+            color: #555;
+        }
+        .error {
+            color: red;
+        }
         #auth-form, #app-container {
             display: none;
         }
-
         #auth-form form {
             display: flex;
             flex-direction: column;
@@ -33,7 +73,6 @@
         #auth-form input {
             padding: 10px;
         }
-
         .token-balance {
             font-size: 1.2em;
             font-weight: bold;
@@ -45,7 +84,6 @@
     <div class="container">
         <h1>AI Tekst til Tale med Tokens</h1>
         <p>Login for at generere tale. Hver forespørgsel koster 1 token.</p>
-        
         <div id="auth-form">
             <h3>Login eller Opret bruger</h3>
             <form id="login-form">
@@ -55,7 +93,6 @@
             </form>
             <button id="signup-button">Opret bruger</button>
         </div>
-
         <div id="app-container">
             <div class="token-balance">Tokens: <span id="token-count">0</span></div>
             <button id="logout-button">Log ud</button>
