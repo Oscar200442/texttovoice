@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tekst til Tale</title>
+    <style>
+        body { font-family: sans-serif; padding: 2em; display: flex; flex-direction: column; align-items: center; }
+        .container { max-width: 600px; width: 100%; text-align: center; }
+        h1 { color: #333; }
+        textarea { width: 100%; height: 200px; padding: 10px; margin-bottom: 1em; font-size: 16px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; font-size: 16px; background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 5px; }
+        button:hover { background-color: #0056b3; }
+        audio { margin-top: 2em; width: 100%; }
+        .loading { font-style: italic; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Tekst til Tale</h1>
+        <p>Skriv en tekst i feltet og lad OpenAI's AI læse den højt.</p>
+        <textarea id="text-input" placeholder="Skriv din tekst her..." required></textarea>
+        <button id="speak-button">Læs op</button>
+        <div id="status-message" class="loading"></div>
+        <audio id="audio-output" controls></audio>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('text-input');
+        const speakButton = document.getElementById('speak-button');
+        const audioOutput = document.getElementById('audio-output');
+        const statusMessage = document.getElementById('status-message');
+
+        speakButton.addEventListener('click', async () => {
+            const text = textInput.value;
+            if (text === '') return;
+
+            speakButton.disabled = true;
+            statusMessage.textContent = 'Genererer tale...';
+            audioOutput.src = '';
+
+            try {
+                const response = await fetch('/api/text-to-speech', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+
+                if (response.ok) {
+                    const audioBlob = await response.blob();
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    audioOutput.src = audioUrl;
+                    statusMessage.textContent = 'Færdig!';
+                    audioOutput.play(); // Afspil den genererede tale automatisk
+                } else {
+                    const errorData = await response.json();
+                    statusMessage.textContent = `Fejl: ${errorData.error}`;
+                }
+            } catch (error) {
+                console.error("Frontend Fejl:", error);
+                statusMessage.textContent = 'En ukendt fejl opstod.';
+            } finally {
+                speakButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
