@@ -4,10 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const audioOutput = document.getElementById('audio-output');
     const statusMessage = document.getElementById('status-message');
 
-    const ELEVENLABS_API_KEY = 'sk_fe655a513ea90fdb019b2616a409f6a7f3773cdeb6a1ba06'; // Hardcoded for now
-    const VOICE_ID = 'C43bq5qXRueL1cBQEOt3'; // Voice ID provided
-    const API_URL = 'https://api.elevenlabs.io/v1/text-to-speech/' + VOICE_ID;
-
     speakButton.addEventListener('click', async () => {
         const text = textInput.value.trim();
         if (!text) {
@@ -19,20 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
         statusMessage.textContent = 'Generating speech...';
 
         try {
-            const response = await fetch(API_URL, {
+            const response = await fetch('/api/text-to-speech', {
                 method: 'POST',
                 headers: {
-                    'xi-api-key': ELEVENLABS_API_KEY,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    text: text,
-                    model_id: 'eleven_multilingual_v2', // High-quality multilingual model
-                    voice_settings: {
-                        stability: 0.5,
-                        similarity_boost: 0.75
-                    }
-                })
+                body: JSON.stringify({ text })
             });
 
             if (!response.ok) {
