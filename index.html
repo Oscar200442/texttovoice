@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Tekst til Tale med Tokens</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
         body { font-family: sans-serif; padding: 2em; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 600px; width: 100%; text-align: center; }
@@ -67,10 +67,8 @@
         const SUPABASE_URL = 'https://czocthrzbtoaudyerssg.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6b2N0aHJ6YnRvYXVkeWVyc3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1MTM5OTEsImV4cCI6MjA3MDA4OTk5MX0.WjPmaEZ-u1Ncoll_Xb_TwLH7nUTn06gBCY0709472X8';
         
-        // Initialiser Supabase-klienten
         const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // UI Elementer
         const authForm = document.getElementById('auth-form');
         const loginForm = document.getElementById('login-form');
         const signupButton = document.getElementById('signup-button');
@@ -82,7 +80,6 @@
         const audioOutput = document.getElementById('audio-output');
         const statusMessage = document.getElementById('status-message');
 
-        // Funktion til at opdatere brugerfladen
         async function updateUI() {
             const { data: { user } } = await supabase.auth.getUser();
 
@@ -96,7 +93,6 @@
             }
         }
 
-        // Hent brugerens token-saldo
         async function fetchUserTokens(userId) {
             const { data, error } = await supabase
                 .from('users')
@@ -112,7 +108,6 @@
             }
         }
 
-        // Login logik
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = loginForm.email.value;
@@ -127,7 +122,6 @@
             }
         });
 
-        // Opret bruger logik
         signupButton.addEventListener('click', async () => {
             const email = loginForm.email.value;
             const password = loginForm.password.value;
@@ -141,13 +135,11 @@
             }
         });
 
-        // Log ud logik
         logoutButton.addEventListener('click', async () => {
             await supabase.auth.signOut();
             updateUI();
         });
 
-        // Læs op logik
         speakButton.addEventListener('click', async () => {
             const text = textInput.value;
             if (text === '') return;
@@ -196,7 +188,6 @@
             }
         });
 
-        // Initialisering
         supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN') {
                 if (session) {
