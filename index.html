@@ -1,69 +1,5 @@
-<!DOCTYPE html>
-<html lang="da">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Tekst til Tale med Tokens</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: sans-serif; padding: 2em; display: flex; flex-direction: column; align-items: center; }
-        .container { max-width: 600px; width: 100%; text-align: center; }
-        h1 { color: #333; }
-        textarea { width: 100%; height: 200px; padding: 10px; margin-bottom: 1em; font-size: 16px; border: 1px solid #ccc; }
-        button { padding: 10px 20px; font-size: 16px; background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 5px; }
-        button:hover { background-color: #0056b3; }
-        audio { margin-top: 2em; width: 100%; }
-        #status-message { min-height: 20px; margin-top: 1em; }
-        .loading { font-style: italic; color: #555; }
-        .error { color: red; }
-
-        #auth-form, #app-container {
-            display: none;
-        }
-
-        #auth-form form {
-            display: flex;
-            flex-direction: column;
-            gap: 1em;
-            margin-top: 2em;
-        }
-        #auth-form input {
-            padding: 10px;
-        }
-
-        .token-balance {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #007bff;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>AI Tekst til Tale med Tokens</h1>
-        <p>Login for at generere tale. Hver forespørgsel koster 1 token.</p>
-        
-        <div id="auth-form">
-            <h3>Login / Opret bruger</h3>
-            <form id="login-form">
-                <input type="email" id="email" placeholder="Din e-mail" required>
-                <input type="password" id="password" placeholder="Dit kodeord" required>
-                <button type="submit">Log ind</button>
-            </form>
-            <button id="signup-button">Opret bruger</button>
-        </div>
-
-        <div id="app-container">
-            <div class="token-balance">Tokens: <span id="token-count">0</span></div>
-            <button id="logout-button">Log ud</button>
-            <textarea id="text-input" placeholder="Skriv din tekst her..." required></textarea>
-            <button id="speak-button">Læs op</button>
-            <div id="status-message" class="loading"></div>
-            <audio id="audio-output" controls></audio>
-        </div>
-    </div>
-
-    <script>
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
         const SUPABASE_URL = 'YOUR_SUPABASE_URL';
         const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
         
@@ -169,7 +105,7 @@
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${session.access_token}` // Sender brugerens token
+                        'Authorization': `Bearer ${session.access_token}`
                     },
                     body: JSON.stringify({ text })
                 });
@@ -180,7 +116,7 @@
                     audioOutput.src = audioUrl;
                     statusMessage.textContent = 'Færdig!';
                     audioOutput.play();
-                    await fetchUserTokens(session.user.id); // Opdaterer token-saldoen
+                    await fetchUserTokens(session.user.id);
                 } else {
                     const errorText = await response.text();
                     statusMessage.textContent = `Fejl: ${errorText}`;
@@ -198,12 +134,19 @@
         // Initialisering
         supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN') {
-                // Her kan du oprette brugeren i din 'users' tabel
-                // Dette kræver en separat serverless function, eller en database trigger
-                // For nu antager vi, at brugeren allerede eksisterer
+                // Vi opdaterer 'users' tabellen her
+                if (session) {
+                    supabase.from('users').insert({ id: session.user.id, email: session.user.email, tokens: 500 }).then(({ data, error }) => {
+                        if (error) {
+                            console.error('Fejl ved oprettelse af bruger i database:', error);
+                        } else {
+                            console.log('Bruger oprettet i database:', data);
+                        }
+                    });
+                }
             }
             updateUI();
         });
-    </script>
-</body>
-</html>
+        updateUI(); // Kører den første gang
+    });
+</script>
