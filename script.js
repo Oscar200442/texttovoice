@@ -42,4 +42,114 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch user's token balance
     async function fetchUserTokens(userId) {
         const { data, error } = await supabase
-            .from
+            .from('users')
+            .select('tokens')
+            .eq('id', userId)
+            .single();
+
+        if (error) {
+            console.error('Error fetching tokens:', error);
+            tokenCount.textContent = 'Error';
+        } else {
+            tokenCount.textContent = data.tokens;
+        }
+    }
+
+    // Login logic
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = loginForm.email.value;
+        const password = loginForm.password.value;
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+            alert(error.message);
+        } else {
+            await updateUI();
+        }
+    });
+
+    // Signup logic
+    signupButton.addEventListener('click', async () => {
+        const email = loginForm.email.value;
+        const password = loginForm.password.value;
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) {
+            alert(error.message);
+        } else {
+            alert('User created! Check your email to confirm.');
+        }
+    });
+
+    // Logout logic
+    logoutButton.addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        await updateUI();
+    });
+
+    // Text-to-speech logic
+    speakButton.addEventListener('click', async () => {
+        const text = textInput.value;
+        if (text === '') return;
+
+        speakButton.disabled = true;
+        statusMessage.textContent = 'Generating speech...';
+        statusMessage.classList.remove('error');
+        audioOutput.src = '';
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            statusMessage.textContent = 'You must be logged in.';
+            statusMessage.classList.add('error');
+            speakButton.disabled = false;
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/text-to-speech', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ text })
+            });
+
+            if (response.ok) {
+                const audioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+                audioOutput.src = audioUrl;
+                statusMessage.textContent = 'Done!';
+                audioOutput.play();
+                await fetchUserTokens(session.user.id);
+            } else {
+                const errorText = await response.text();
+                statusMessage.textContent = `Error: ${errorText}`;
+                statusMessage.classList.add('error');
+            }
+        } catch (error) {
+            console.error('Frontend Error:', error);
+            statusMessage.textContent = 'A network error occurred.';
+            statusMessage.classList.add('error');
+        } finally {
+            speakButton.disabled = false;
+        }
+    });
+
+    // Initialize on auth state change
+    supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+            supabase.from('users').insert({ id: session.user.id, email: session.user.email, tokens: 500 })
+                .then(({ error, data }) => {
+                    if (error) {
+                        console.error('Error creating user in database:', error);
+                    } else {
+                        console.log('User created in database:', data);
+                    }
+                });
+        }
+        updateUI();
+    });
+
+    // Initial UI update
+    updateUI();
+});
