@@ -1,41 +1,45 @@
+// Import the necessary libraries
+import { TextToSpeechClient } from '@google-cloud/text-to-speech';
+import { Buffer } from 'buffer';
+
 export default async (req, res) => {
+    // Make sure it's a POST request
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
     const { text } = req.body;
+    // Check if text was sent
     if (!text) {
         return res.status(400).json({ error: 'Text is required' });
     }
-
-    const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
-    const VOICE_ID = 'kdmDKE6EkgrWrrykO9Qt';
-    const API_URL = `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`;
+    
+    // Get the API key from environment variables
+    const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
     try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: {
-                'xi-api-key': ELEVENLABS_API_KEY,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                text: text,
-                model_id: 'eleven_multilingual_v2',
-                voice_settings: {
-                    stability: 0.8,
-                    similarity_boost: 0.6
-                }
-            })
+        // Create a client for Google Text-to-Speech
+        const client = new TextToSpeechClient({
+            key: GOOGLE_API_KEY // Use the API key here
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to generate speech');
-        }
+        // Configure the API request
+        const request = {
+            input: { text: text },
+            // Choose the voice: Danish (da-DK) and a neutral gender
+            voice: { languageCode: 'da-DK', ssmlGender: 'NEUTRAL' },
+            // Choose the output format as MP3
+            audioConfig: { audioEncoding: 'MP3' },
+        };
 
-        const audioBlob = await response.blob();
+        // Send the request to the Google Cloud Text-to-Speech API
+        const [response] = await client.synthesizeSpeech(request);
+        const audioContent = response.audioContent;
+
+        // Set the header to tell the browser it's an audio file
         res.setHeader('Content-Type', 'audio/mpeg');
-        res.status(200).send(Buffer.from(await audioBlob.arrayBuffer()));
+        // Send the audio back as a buffer
+        res.status(200).send(Buffer.from(audioContent));
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ error: 'Failed to generate speech' });
